@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Dönen Fotoğraf Stüdyosu</title>
+<style>
+:root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;padding:18px 13px 30px;background:#10131a;color:#f4f6fb;font:16px system-ui,sans-serif;display:flex;justify-content:center}main{width:min(100%,620px)}h1{font-size:1.45rem;margin:0 0 6px}p{color:#bac3d3;line-height:1.4}.panel{background:#1b202b;border:1px solid #303849;border-radius:17px;padding:14px;margin-top:14px}label{display:block;font-weight:650;margin:13px 0 5px}.value{color:#d9e4f6;font-weight:600}input[type=file],input[type=range],select{width:100%;margin:5px 0 2px}input[type=range]{accent-color:#8ab4ff}select,button,a.dl,input[type=number]{font:inherit;border:1px solid #394357;border-radius:11px;padding:11px;width:100%;margin-top:8px;background:#0f141e;color:#fff}button,a.dl{display:block;text-align:center;font-weight:750;background:#8ab4ff;color:#101725;cursor:pointer;text-decoration:none;border:0}button:disabled{opacity:.45}canvas{display:block;width:100%;aspect-ratio:1;max-height:58vh;object-fit:contain;background:#080a0f;border-radius:12px;margin:8px 0;touch-action:none}.hint{font-size:.84rem}#status{min-height:1.4em;font-size:.94rem}.control{margin:14px 0}.rangehead{display:flex;justify-content:space-between;gap:10px;align-items:center}.rangeinputs{display:grid;grid-template-columns:1fr 92px;gap:10px;align-items:center}.rangeinputs input[type=number]{margin:0;padding:8px}.pill{padding:9px 10px;background:#121722;border-radius:10px;color:#bac3d3;font-size:.86rem}.overlay{position:fixed;inset:0;background:#080b12eF;z-index:99;display:flex;align-items:center;justify-content:center;padding:20px}.overlay[hidden]{display:none}.dialog{width:min(100%,420px);padding:22px;border-radius:18px;background:#1b202b;border:1px solid #53617a;box-shadow:0 18px 70px #000a}.dialog h2{margin:0 0 8px;font-size:1.25rem}.bar{height:10px;border-radius:99px;background:#303849;overflow:hidden;margin:16px 0}.bar>div{height:100%;width:0;background:#8ab4ff;transition:width .12s}.warn{color:#ffe1a3;font-size:.9rem}
+</style>
+</head>
+<body><main>
+<h1>Dönen Fotoğraf Stüdyosu</h1>
+<p>Fotoğrafı parmaklarınla büyüt, küçült ve taşı. Sonra dönüş şeklini ve video süresini ayarla.</p>
+<section class="panel">
+<label for="photo">1. Fotoğrafı seç</label><input id="photo" type="file" accept="image/*">
+<div class="pill">Dokunmatik kullanım: Tek parmakla sürükle, iki parmakla kıstırarak yakınlaştır/uzaklaştır.</div>
+<canvas id="preview" width="720" height="720"></canvas>
+<label for="shape">2. Video şekli / kırpma maskesi</label><select id="shape"><option value="square">Kare</option><option value="circle">Yuvarlak</option><option value="rounded">Yuvarlatılmış kare</option><option value="diamond">Baklava / elmas</option><option value="hexagon">Altıgen</option><option value="heart">Kalp</option><option value="star">Yıldız</option><option value="portrait">Dikey çerçeve</option><option value="landscape">Yatay çerçeve</option></select>
+<label for="rotateMode">3. Dönüşte hangi bölüm dönsün?</label><select id="rotateMode"><option value="crop">Sadece ekranda görünen kırpılmış bölüm dönsün</option><option value="whole">Fotoğrafın tamamı dönsün</option></select>
+<label for="fill">4. Dönüş sırasında boş alan</label><select id="fill"><option value="blur">Fotoğrafın bulanık arka planı</option><option value="dark">Koyu arka plan</option><option value="transparent">Şeffaf arka plan</option></select>
+<div class="control"><div class="rangehead"><label for="duration" style="margin:0">Video süresi</label><span class="value" id="durationVal">6 sn</span></div><div class="rangeinputs"><input id="duration" type="range" min="1" max="600" step="1" value="6"><input id="durationNum" aria-label="Video süresi saniye" type="number" min="1" max="600" step="1" value="6"></div></div>
+<div class="control"><div class="rangehead"><label for="speed" style="margin:0">Dönüş hızı</label><span class="value" id="speedVal">10 tur/dk</span></div><div class="rangeinputs"><input id="speed" type="range" min="0.01" max="1200" step="0.01" value="10"><input id="speedNum" aria-label="Dönüş hızı tur dakika" type="number" min="0.01" max="1200" step="0.01" value="10"></div><p class="hint">Hız çok yüksekse kareler arasında sıçrama görülebilir. 1 tur/dk = dakikada bir tam dönüş.</p></div>
+<div class="control"><div class="rangehead"><label for="fps" style="margin:0">Kare hızı (FPS)</label><span class="value" id="fpsVal">30 FPS</span></div><div class="rangeinputs"><input id="fps" type="range" min="5" max="60" step="1" value="30"><input id="fpsNum" aria-label="Kare hızı FPS" type="number" min="5" max="60" step="1" value="30"></div></div>
+<label for="quality">Video çözünürlüğü</label><select id="quality"><option value="240">240 × 240 — çok küçük</option><option value="360">360 × 360</option><option value="480">480 × 480</option><option value="540">540 × 540</option><option value="720" selected>720 × 720 — HD</option><option value="1080">1080 × 1080 — Full HD</option><option value="1440">1440 × 1440 — 2K</option><option value="2160">2160 × 2160 — 4K (ağır)</option></select>
+<label for="format">Çıktı formatı</label><select id="format"><option value="auto">Otomatik (desteklenen video formatı)</option><option value="webm">WebM (.webm)</option><option value="mp4">MP4 (.mp4 — destekleniyorsa)</option><option value="gif">Animasyonlu GIF (.gif)</option></select>
+<button id="make" disabled>Videoyu oluştur</button>
+<p id="status" role="status">Önce fotoğraf seç.</p><a id="download" class="dl" hidden>Dosyayı indir</a>
+<p class="hint">Süre 1–600 saniye; hız 0,01–1200 tur/dk; 5–60 FPS; 240p–4K çözünürlük. GIF, uyumluluk için 360p ve en fazla 30 saniyeyle sınırlandırılır. M4A ses formatıdır, video formatı olmadığı için listede yoktur.</p>
+</section></main>
+<div id="busyOverlay" class="overlay" hidden role="alertdialog" aria-modal="true" aria-labelledby="busyTitle"><div class="dialog"><h2 id="busyTitle">Dosya hazırlanıyor…</h2><p id="busyText">Lütfen bu sayfayı açık tut.</p><div class="bar"><div id="progressFill"></div></div><p class="warn">Bu sırada ekranı kilitleme veya sekmeyi kapatma. Büyük çözünürlük ve uzun süre daha fazla bellek kullanır.</p><button id="cancelBtn" type="button">İşlemi iptal et</button></div></div>
+<script>
+(() => {
+const $=id=>document.getElementById(id);
+const photo=$('photo'),canvas=$('preview'),ctx=canvas.getContext('2d'),shape=$('shape'),rotateMode=$('rotateMode'),fill=$('fill'),duration=$('duration'),speed=$('speed'),fps=$('fps'),quality=$('quality'),format=$('format'),make=$('make'),status=$('status'),download=$('download');
+const overlay=$('busyOverlay'),busyText=$('busyText'),progressFill=$('progressFill'),cancelBtn=$('cancelBtn');
+let cancelRequested=false;
+let img=null,blobUrl=null,busy=false;
+let view={scale:1,x:0,y:0}; // x/y in canvas CSS-independent coordinates
+let pointers=new Map(),gesture=null;
+const W=720,H=720,CX=W/2,CY=H/2;
+function syncLabels(){
+ $('durationVal').textContent=duration.value+' sn';
+ $('speedVal').textContent=Number(speed.value).toLocaleString('tr-TR')+' tur/dk';
+ $('fpsVal').textContent=fps.value+' FPS';
+}
+function bindPair(range,number){
+ const min=Number(range.min),max=Number(range.max);
+ range.addEventListener('input',()=>{number.value=range.value;syncLabels()});
+ number.addEventListener('change',()=>{let v=Number(number.value);if(!Number.isFinite(v))v=Number(range.value);v=Math.max(min,Math.min(max,v));number.value=v;range.value=v;syncLabels()});
+}
+bindPair(duration,$('durationNum'));bindPair(speed,$('speedNum'));bindPair(fps,$('fpsNum'));syncLabels();
+function fitBase(){if(!img)return 1;return Math.min(W/img.naturalWidth,H/img.naturalHeight)*0.88}
+function coverScale(){if(!img)return 1;return Math.max(W/img.naturalWidth,H/img.naturalHeight)}
+function cropBox(){return{x:0,y:0,w:W,h:H}}
+function photoRect(){
+ const s=fitBase()*view.scale;
+ return {x:CX+view.x-img.naturalWidth*s/2,y:CY+view.y-img.naturalHeight*s/2,w:img.naturalWidth*s,h:img.naturalHeight*s,s};
+}
+function drawBaseBackground(c,angle=0){
+ c.clearRect(0,0,W,H);
+ if(fill.value==='dark'){c.fillStyle='#080a0f';c.fillRect(0,0,W,H);return}
+ if(fill.value==='transparent'){return}
+ if(!img)return;
+ c.save();c.filter='blur(26px)';c.globalAlpha=.88;
+ let s=coverScale(),iw=img.naturalWidth*s,ih=img.naturalHeight*s;
+ c.drawImage(img,CX-iw/2,CY-ih/2,iw,ih);c.restore();
+ c.fillStyle='rgba(8,10,15,.20)';c.fillRect(0,0,W,H);
+}
+function drawScene(c,angle=0){
+ c.clearRect(0,0,W,H);
+ const box=cropBox();
+ if(shape.value!=='square'){c.save();c.beginPath();
+   if(shape.value==='circle'){c.arc(CX,CY,W*.47,0,Math.PI*2)}
+   else if(shape.value==='rounded'){const r=92;c.moveTo(r,0);c.lineTo(W-r,0);c.quadraticCurveTo(W,0,W,r);c.lineTo(W,H-r);c.quadraticCurveTo(W,H,W-r,H);c.lineTo(r,H);c.quadraticCurveTo(0,H,0,H-r);c.lineTo(0,r);c.quadraticCurveTo(0,0,r,0)}
+   else if(shape.value==='diamond'){c.moveTo(CX,0);c.lineTo(W,CY);c.lineTo(CX,H);c.lineTo(0,CY);c.closePath()}
+   else if(shape.value==='hexagon'){c.moveTo(W*.25,0);c.lineTo(W*.75,0);c.lineTo(W,CY);c.lineTo(W*.75,H);c.lineTo(W*.25,H);c.lineTo(0,CY);c.closePath()}
+   else if(shape.value==='heart'){c.moveTo(CX,H*.9);c.bezierCurveTo(W*.02,H*.52,W*.02,H*.2,W*.27,H*.2);c.bezierCurveTo(W*.42,H*.2,W*.48,H*.34,CX,H*.4);c.bezierCurveTo(W*.62,H*.25,W*.72,H*.08,W*.86,H*.2);c.bezierCurveTo(W*1.1,H*.38,W*.88,H*.66,CX,H*.9);c.closePath()}
+   else if(shape.value==='star'){for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,r=i%2?W*.22:W*.47,x=CX+Math.cos(a)*r,y=CY+Math.sin(a)*r;i?c.lineTo(x,y):c.moveTo(x,y)}c.closePath()}
+   else if(shape.value==='portrait'){c.rect(W*.18,0,W*.64,H)}
+   else if(shape.value==='landscape'){c.rect(0,H*.18,W,H*.64)}
+   c.clip()}
+ drawBaseBackground(c,angle);
+ if(img){
+   const r=photoRect();
+   c.save();
+   if(rotateMode.value==='crop'){
+     // Keep the user's chosen crop stationary; rotate the rendered crop as a layer around the canvas center.
+     const layer=document.createElement('canvas');layer.width=W;layer.height=H;const l=layer.getContext('2d');
+     l.clearRect(0,0,W,H);l.drawImage(img,r.x,r.y,r.w,r.h);
+     c.translate(CX,CY);c.rotate(angle);c.drawImage(layer,-CX,-CY);c.restore();
+   }else{
+     c.translate(CX,CY);c.rotate(angle);c.drawImage(img,r.x-CX,r.y-CY,r.w,r.h);c.restore();
+   }
+ }
+ if(shape.value!=='square')c.restore();
+}
+function drawPreview(){drawScene(ctx,0)}
+photo.addEventListener('change',()=>{
+ const f=photo.files?.[0];if(!f)return;
+ if(img?.src?.startsWith('blob:'))URL.revokeObjectURL(img.src);
+ img=new Image();img.onload=()=>{view={scale:1,x:0,y:0};make.disabled=false;drawPreview();status.textContent='Fotoğraf hazır. Önizlemeyi dokunarak düzenleyebilirsin.';download.hidden=true};
+ img.onerror=()=>status.textContent='Fotoğraf açılamadı; başka bir fotoğraf dene.';
+ img.src=URL.createObjectURL(f);
+});
+[shape,rotateMode,fill].forEach(el=>el.addEventListener('change',drawPreview));
+function localPoint(e){const r=canvas.getBoundingClientRect();return{x:(e.clientX-r.left)*W/r.width,y:(e.clientY-r.top)*H/r.height}}
+function dist(a,b){return Math.hypot(a.x-b.x,a.y-b.y)}
+canvas.addEventListener('pointerdown',e=>{
+ if(!img)return;canvas.setPointerCapture(e.pointerId);pointers.set(e.pointerId,localPoint(e));
+ if(pointers.size===1){const p=pointers.get(e.pointerId);gesture={kind:'drag',start:p,origin:{x:view.x,y:view.y}}}
+ else if(pointers.size>=2){const pts=[...pointers.values()];gesture={kind:'pinch',dist:Math.max(1,dist(pts[0],pts[1])),scale:view.scale,center:{x:(pts[0].x+pts[1].x)/2,y:(pts[0].y+pts[1].y)/2},origin:{x:view.x,y:view.y}}}
+});
+canvas.addEventListener('pointermove',e=>{
+ if(!pointers.has(e.pointerId))return;pointers.set(e.pointerId,localPoint(e));
+ if(pointers.size===1&&gesture?.kind==='drag'){const p=pointers.get(e.pointerId);view.x=gesture.origin.x+p.x-gesture.start.x;view.y=gesture.origin.y+p.y-gesture.start.y;drawPreview()}
+ else if(pointers.size>=2){const pts=[...pointers.values()];if(!gesture||gesture.kind!=='pinch'){gesture={kind:'pinch',dist:Math.max(1,dist(pts[0],pts[1])),scale:view.scale,center:{x:(pts[0].x+pts[1].x)/2,y:(pts[0].y+pts[1].y)/2},origin:{x:view.x,y:view.y}}}
+ const d=dist(pts[0],pts[1]),center={x:(pts[0].x+pts[1].x)/2,y:(pts[0].y+pts[1].y)/2};
+ view.scale=Math.max(.1,Math.min(12,gesture.scale*d/gesture.dist));
+ view.x=gesture.origin.x+center.x-gesture.center.x;view.y=gesture.origin.y+center.y-gesture.center.y;drawPreview()
+ }
+});
+function release(e){pointers.delete(e.pointerId);gesture=null;if(pointers.size===1){const [id,p]=[...pointers.entries()][0];gesture={kind:'drag',start:p,origin:{x:view.x,y:view.y}}}}
+canvas.addEventListener('pointerup',release);canvas.addEventListener('pointercancel',release);
+function setProgress(p,text){progressFill.style.width=Math.max(0,Math.min(100,p*100))+'%';if(text)busyText.textContent=text}
+function finishUI(){busy=false;make.disabled=false;cancelBtn.textContent='Kapat';}
+cancelBtn.addEventListener('click',()=>{if(busy){cancelRequested=true;busyText.textContent='İptal ediliyor…';cancelBtn.disabled=true}else{overlay.hidden=true;cancelBtn.disabled=false;cancelBtn.textContent='İşlemi iptal et'}});
+function gifEncode(frames,w,h,delayCs){
+ // Compact offline GIF89a encoder with a 3-3-2 color palette and LZW compression.
+ const bytes=[];const ascii=s=>{for(let i=0;i<s.length;i++)bytes.push(s.charCodeAt(i))};
+ const u16=n=>{bytes.push(n&255,(n>>8)&255)};
+ ascii('GIF89a');u16(w);u16(h);bytes.push(0xF7,0,0);
+ for(let i=0;i<256;i++){bytes.push(((i>>5)&7)*255/7|0,((i>>2)&7)*255/7|0,(i&3)*255/3|0)}
+ bytes.push(0x21,0xFF,0x0B);ascii('NETSCAPE2.0');bytes.push(3,1,0,0,0);
+ function blockData(data){for(let i=0;i<data.length;i+=255){const part=data.slice(i,i+255);bytes.push(part.length,...part)}bytes.push(0)}
+ function lzw(pix){
+   const min=8,clear=1<<min,end=clear+1;let dict=new Map(),next=end+1,codeSize=min+1,bits=0,acc=0,out=[];
+   const emit=code=>{acc|=code<<bits;bits+=codeSize;while(bits>=8){out.push(acc&255);acc>>=8;bits-=8}};
+   emit(clear);let prefix=pix[0]??0;
+   for(let i=1;i<pix.length;i++){
+     const k=pix[i],combo=prefix+','+k;
+     if(dict.has(combo)){prefix=dict.get(combo)}
+     else{
+       emit(prefix);
+       if(next<4096){
+         dict.set(combo,next++);
+         if(next>(1<<codeSize)&&codeSize<12)codeSize++;
+       }else{emit(clear);dict.clear();next=end+1;codeSize=min+1}
+       prefix=k;
+     }
+   }
+   emit(prefix);emit(end);if(bits)out.push(acc&255);return out;
+ }
+ for(const pix of frames){bytes.push(0x21,0xF9,4,0);u16(delayCs);bytes.push(0,0);bytes.push(0x2C);u16(0);u16(0);u16(w);u16(h);bytes.push(0);bytes.push(8);blockData(lzw(pix))}
+ bytes.push(0x3B);return new Blob([new Uint8Array(bytes)],{type:'image/gif'});
+}
+make.addEventListener('click',async()=>{
+ if(!img||busy)return;
+ busy=true;cancelRequested=false;make.disabled=true;download.hidden=true;overlay.hidden=false;cancelBtn.disabled=false;cancelBtn.textContent='İşlemi iptal et';setProgress(0,'Başlatılıyor…');
+ const size=Number(quality.value),durationMs=Number(duration.value)*1000,rpm=Number(speed.value),framesPerSec=Number(fps.value),totalTurns=rpm*Number(duration.value)/60;
+ const out=document.createElement('canvas');out.width=size;out.height=size;const octx=out.getContext('2d',{willReadFrequently:true});
+ function render(angle){octx.setTransform(size/720,0,0,size/720,0,0);drawScene(octx,angle)}
+ const gifMode=format.value==='gif';
+ if(gifMode&&(Number(duration.value)>30||size>360)){
+   status.textContent='GIF için süreyi en fazla 30 saniye, çözünürlüğü en fazla 360 yap.';
+   busy=false;make.disabled=false;overlay.hidden=true;return;
+ }
+ if(!gifMode&&(!out.captureStream||!window.MediaRecorder)){status.textContent='Bu tarayıcı video kaydını desteklemiyor. Android Chrome ile dene.';busy=false;make.disabled=false;overlay.hidden=true;return}
+ if(gifMode){
+   try{
+     const gifFps=Math.min(15,framesPerSec),count=Math.max(2,Math.ceil(Number(duration.value)*gifFps)),frames=[];
+     for(let i=0;i<count;i++){
+       if(cancelRequested)throw new Error('cancelled');
+       render(i/count*Math.PI*2*totalTurns);
+       const data=octx.getImageData(0,0,size,size).data,pix=new Uint8Array(size*size);
+       for(let p=0,j=0;p<data.length;p+=4,j++)pix[j]=(data[p]>>5)<<5|(data[p+1]>>5)<<2|(data[p+2]>>6);
+       frames.push(pix);setProgress((i+1)/count,`GIF kareleri hazırlanıyor: ${i+1}/${count}`);
+       if(i%3===0)await new Promise(r=>setTimeout(r,0));
+     }
+     if(cancelRequested)throw new Error('cancelled');
+     setProgress(.98,'GIF dosyası sıkıştırılıyor…');
+     const blob=gifEncode(frames,size,size,Math.max(2,Math.round(100/gifFps)));
+     if(blobUrl)URL.revokeObjectURL(blobUrl);blobUrl=URL.createObjectURL(blob);download.href=blobUrl;download.download='donen-fotograf.gif';download.hidden=false;status.textContent='Bitti! Animasyonlu GIF hazır.';
+     setProgress(1,'Tamamlandı!');finishUI();
+   }catch(e){status.textContent=e.message==='cancelled'?'İşlem iptal edildi.':'GIF oluşturulamadı; daha düşük çözünürlük veya süre dene.';finishUI()}
+   return;
+ }
+ const stream=out.captureStream(framesPerSec);
+ const candidates=format.value==='mp4'?['video/mp4;codecs=avc1.42E01E','video/mp4']:format.value==='webm'?['video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm']:['video/mp4;codecs=avc1.42E01E','video/mp4','video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm'];
+ const mime=candidates.find(t=>MediaRecorder.isTypeSupported(t));
+ if(!mime){stream.getTracks().forEach(t=>t.stop());status.textContent=format.value==='mp4'?'Bu tarayıcı MP4 kaydını desteklemiyor; WebM seç.':'Desteklenen format bulunamadı.';finishUI();overlay.hidden=true;return}
+ let rec;try{rec=new MediaRecorder(stream,{mimeType:mime})}catch(e){stream.getTracks().forEach(t=>t.stop());status.textContent='Kayıt başlatılamadı; WebM seçip tekrar dene.';finishUI();overlay.hidden=true;return}
+ const chunks=[];rec.ondataavailable=e=>{if(e.data?.size)chunks.push(e.data)};
+ rec.onerror=()=>{stream.getTracks().forEach(t=>t.stop());status.textContent='Kayıt sırasında hata oluştu.';finishUI();overlay.hidden=true};
+ rec.onstop=()=>{stream.getTracks().forEach(t=>t.stop());const isMp4=mime.startsWith('video/mp4');if(!cancelRequested){const blob=new Blob(chunks,{type:isMp4?'video/mp4':'video/webm'});if(blobUrl)URL.revokeObjectURL(blobUrl);blobUrl=URL.createObjectURL(blob);download.href=blobUrl;download.download=isMp4?'donen-fotograf.mp4':'donen-fotograf.webm';download.hidden=false;status.textContent='Bitti! Format: '+(isMp4?'MP4':'WebM')+'. Dosyanı indirebilirsin.'}else status.textContent='İşlem iptal edildi.';finishUI();setProgress(1,cancelRequested?'İptal edildi.':'Tamamlandı!');drawPreview()};
+ rec.start();
+ const start=performance.now();
+ function frame(now){if(cancelRequested){if(rec.state==='recording')rec.stop();return}const p=Math.min((now-start)/durationMs,1);render(p*Math.PI*2*totalTurns);setProgress(p,`Video kaydediliyor: ${Math.round(p*100)}%`);if(p<1&&rec.state==='recording')requestAnimationFrame(frame);else if(rec.state==='recording')setTimeout(()=>{if(rec.state==='recording')rec.stop()},180)}
+ requestAnimationFrame(frame);
+});
+})();
+</script></body></html>
