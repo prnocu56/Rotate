@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>SpinoStudio — Photo Animation Studio</title>
+<style>
+:root{color-scheme:dark}*{box-sizing:border-box}
+body{margin:0;padding:18px 13px 30px;background:radial-gradient(ellipse at 5% 0%,#44216d 0,transparent 38%),radial-gradient(ellipse at 95% 12%,#075e78 0,transparent 35%),linear-gradient(145deg,#100d25,#151a36 55%,#071b2c);color:#fbf7ff;font:16px system-ui,sans-serif;display:flex;justify-content:center;min-height:100vh}
+main{width:min(100%,620px)}.language-panel{margin-top:12px;padding:12px 14px;border-radius:16px;background:linear-gradient(100deg,#ff6bc91f,#5ee7ff1f);border:1px solid #a98cff66}.language-panel label{margin-top:0}h1{font-size:2rem;letter-spacing:-.04em;margin:0 0 6px;background:linear-gradient(90deg,#ff83da,#a6a1ff,#62e7ff);-webkit-background-clip:text;background-clip:text;color:transparent}.brand-sub{color:#d9d8ff;line-height:1.4}
+.panel{background:linear-gradient(145deg,#211b42ed,#132b45ed);border:1px solid #a98cff66;border-radius:22px;padding:15px;margin-top:14px;box-shadow:0 18px 50px #03061780,inset 0 1px #ffffff12}
+label{display:block;font-weight:700;margin:13px 0 5px;color:#f4eaff}.value{color:#74f0ff;font-weight:700}
+input[type=file],input[type=range],select{width:100%;margin:5px 0 2px}input[type=range]{accent-color:#ff70d4}
+select,button,a.dl,input[type=number],input[type=text]{font:inherit;border:1px solid #6f77bb;border-radius:12px;padding:11px;width:100%;margin-top:8px;background:#101a35;color:#fff}
+button,a.dl{display:block;text-align:center;font-weight:800;background:linear-gradient(100deg,#ff6bc9,#a38aff 48%,#5ee7ff);color:#15112c;cursor:pointer;text-decoration:none;border:0;box-shadow:0 6px 22px #a76bff32}
+button:disabled{opacity:.45}canvas{display:block;width:100%;aspect-ratio:1;max-height:58vh;object-fit:contain;background:linear-gradient(135deg,#090d25,#142c43);border:1px solid #83e8ff50;border-radius:16px;margin:8px 0;touch-action:none;box-shadow:0 0 28px #4b9bff22}
+.hint{font-size:.84rem}#status{min-height:1.4em;font-size:.94rem;color:#8df4ff}.control{margin:18px 0}
+.rangehead{display:flex;justify-content:space-between;gap:10px;align-items:center}.rangeinputs{display:grid;grid-template-columns:1fr 100px;gap:10px;align-items:center}.rangeinputs input[type=number]{margin:0;padding:8px;border-color:#bd81e8}
+.pill{padding:10px 12px;background:#11152c;border:1px solid #5e65a7;border-radius:12px;color:#d9d9ff;font-size:.86rem}
+.overlay{position:fixed;inset:0;background:#09091bf2;backdrop-filter:blur(12px);z-index:99;display:flex;align-items:center;justify-content:center;padding:20px}.overlay[hidden]{display:none}
+.dialog{width:min(100%,420px);padding:22px;border-radius:22px;background:linear-gradient(145deg,#2b1b51,#12334a);border:1px solid #83e8ff88;box-shadow:0 18px 70px #000a}.dialog h2{margin:0 0 8px;font-size:1.25rem;color:#ffb4e8}
+.bar{height:12px;border-radius:99px;background:#282d54;overflow:hidden;margin:16px 0}.bar>div{height:100%;width:0;background:linear-gradient(90deg,#ff69c9,#a18bff,#59edff);transition:width .12s}.warn{color:#ffe1a3;font-size:.9rem}
+</style>
+</head>
+<body><main>
+<h1>✨ SpinoStudio</h1>
+<p class="brand-sub">Rotate, shape, and animate your photos.</p>
+<div class="language-panel">
+<label for="languageSelect">🌐 Interface language</label>
+<select id="languageSelect" aria-label="Interface language"></select>
+<p class="hint" id="languageStatus">English is the default. Select another language to translate the interface (internet required).</p>
+</div>
+
+<section class="panel">
+<label for="photo">1. Choose a photo</label><input id="photo" type="file" accept="image/*">
+<div class="pill">Touch controls: drag with one finger; pinch with two fingers to zoom.</div>
+<canvas id="preview" width="720" height="720"></canvas>
+<label for="shape">2. Video shape / crop mask</label><select id="shape"><option value="square">Square</option><option value="circle">Circle</option><option value="rounded">Rounded square</option><option value="diamond">Diamond</option><option value="hexagon">Hexagon</option><option value="heart">Heart</option><option value="star">Star</option><option value="portrait">Portrait frame</option><option value="landscape">Landscape frame</option></select>
+<label for="rotateMode">3. What should rotate?</label><select id="rotateMode"><option value="crop">Only the visible cropped area</option><option value="whole">The entire photo</option></select>
+<label for="fill">4. Background behind the rotation</label><select id="fill"><option value="blur">Blurred photo background</option><option value="dark">Dark background</option><option value="transparent">Transparent background</option></select>
+<div class="control"><div class="rangehead"><label for="duration" style="margin:0">Video duration</label><span class="value" id="durationVal">6 sec</span></div><div class="rangeinputs"><input id="duration" type="range" min="1" max="600" step="1" value="6"><input id="durationNum" aria-label="Video duration in seconds" type="number" min="1" max="600" step="1" value="6"></div></div>
+<div class="control"><div class="rangehead"><label for="speed" style="margin:0">Rotation speed</label><span class="value" id="speedVal">10 RPM</span></div><div class="rangeinputs"><input id="speed" type="range" min="0.01" max="1200" step="0.01" value="10"><input id="speedNum" aria-label="Rotation speed in revolutions per minute" type="number" min="0.01" max="1200" step="0.01" value="10"></div><p class="hint">At very high speeds, motion may appear to jump between frames. 1 RPM = one full rotation per minute.</p></div>
+<div class="control"><div class="rangehead"><label for="fps" style="margin:0">Square hızı (FPS)</label><span class="value" id="fpsVal">30 FPS</span></div><div class="rangeinputs"><input id="fps" type="range" min="5" max="60" step="1" value="30"><input id="fpsNum" aria-label="Square hızı FPS" type="number" min="5" max="60" step="1" value="30"></div></div>
+<label for="quality">Video resolution</label><select id="quality"><option value="240">240 × 240 — çok küçük</option><option value="360">360 × 360</option><option value="480">480 × 480</option><option value="540">540 × 540</option><option value="720" selected>720 × 720 — HD</option><option value="1080">1080 × 1080 — Full HD</option><option value="1440">1440 × 1440 — 2K</option><option value="2160">2160 × 2160 — 4K (ağır)</option></select>
+<label for="format">Output format</label><select id="format"><option value="auto">Automatic (supported format)</option><option value="webm">WebM (.webm)</option><option value="mp4">MP4 / H.264 (.mp4 — if supported)</option><option value="mp4av1">MP4 / AV1 (.mp4 — if supported)</option><option value="webmvp8">WebM / VP8 (.webm)</option><option value="webmvp9">WebM / VP9 (.webm)</option><option value="ogg">Ogg / Theora (.ogv — if supported)</option><option value="gif">Animated GIF (.gif)</option></select>
+<label for="filename">Download file name</label><input id="filename" type="text" maxlength="100" value="SpinoStudio-animasyon" placeholder="Enter a file name (without extension)"><p class="hint">The extension is added automatically.</p><button id="make" disabled>✨ Create animation</button>
+<p id="status" role="status">Choose a photo first.</p><a id="download" class="dl" hidden>Download file</a>
+<p class="hint">Duration: 1–600 seconds; speed: 0.01–1200 RPM; 5–60 FPS; 240p–4K resolution. GIF is limited to 360 × 360 and 30 seconds for compatibility. M4A is an audio format, not a video format. Availability varies by device and browser.</p>
+</section></main>
+<div id="busyOverlay" class="overlay" hidden role="alertdialog" aria-modal="true" aria-labelledby="busyTitle"><div class="dialog"><h2 id="busyTitle">Preparing file…</h2><p id="busyText">Please keep this page open.</p><div class="bar"><div id="progressFill"></div></div><p class="warn">Do not lock the screen or close this tab. High resolutions and long videos use more memory.</p><button id="cancelBtn" type="button">Cancel process</button></div></div>
+<script>
+(() => {
+const $=id=>document.getElementById(id);
+const photo=$('photo'),canvas=$('preview'),ctx=canvas.getContext('2d'),shape=$('shape'),rotateMode=$('rotateMode'),fill=$('fill'),duration=$('duration'),speed=$('speed'),fps=$('fps'),quality=$('quality'),format=$('format'),filename=$('filename'),make=$('make'),status=$('status'),download=$('download');
+const overlay=$('busyOverlay'),busyText=$('busyText'),progressFill=$('progressFill'),cancelBtn=$('cancelBtn');
+let cancelRequested=false;
+let img=null,blobUrl=null,busy=false;
+let view={scale:1,x:0,y:0}; // x/y in canvas CSS-independent coordinates
+let pointers=new Map(),gesture=null;
+const W=720,H=720,CX=W/2,CY=H/2;
+function syncLabels(){
+ $('durationVal').textContent=duration.value+' sec';
+ $('speedVal').textContent=Number(speed.value).toLocaleString('tr-TR')+' RPM';
+ $('fpsVal').textContent=fps.value+' FPS';
+}
+function bindPair(range,number){
+ const min=Number(range.min),max=Number(range.max);
+ range.addEventListener('input',()=>{number.value=range.value;syncLabels()});
+ number.addEventListener('change',()=>{let v=Number(number.value);if(!Number.isFinite(v))v=Number(range.value);v=Math.max(min,Math.min(max,v));number.value=v;range.value=v;syncLabels()});
+}
+bindPair(duration,$('durationNum'));bindPair(speed,$('speedNum'));bindPair(fps,$('fpsNum'));syncLabels();
+function fitBase(){if(!img)return 1;return Math.min(W/img.naturalWidth,H/img.naturalHeight)*0.88}
+function coverScale(){if(!img)return 1;return Math.max(W/img.naturalWidth,H/img.naturalHeight)}
+function cropBox(){return{x:0,y:0,w:W,h:H}}
+function photoRect(){
+ const s=fitBase()*view.scale;
+ return {x:CX+view.x-img.naturalWidth*s/2,y:CY+view.y-img.naturalHeight*s/2,w:img.naturalWidth*s,h:img.naturalHeight*s,s};
+}
+function drawBaseBackground(c,angle=0){
+ c.clearRect(0,0,W,H);
+ if(fill.value==='dark'){c.fillStyle='#080a0f';c.fillRect(0,0,W,H);return}
+ if(fill.value==='transparent'){return}
+ if(!img)return;
+ c.save();c.filter='blur(26px)';c.globalAlpha=.88;
+ let s=coverScale(),iw=img.naturalWidth*s,ih=img.naturalHeight*s;
+ c.drawImage(img,CX-iw/2,CY-ih/2,iw,ih);c.restore();
+ c.fillStyle='rgba(8,10,15,.20)';c.fillRect(0,0,W,H);
+}
+function drawScene(c,angle=0){
+ c.clearRect(0,0,W,H);
+ const box=cropBox();
+ if(shape.value!=='square'){c.save();c.beginPath();
+   if(shape.value==='circle'){c.arc(CX,CY,W*.47,0,Math.PI*2)}
+   else if(shape.value==='rounded'){const r=92;c.moveTo(r,0);c.lineTo(W-r,0);c.quadraticCurveTo(W,0,W,r);c.lineTo(W,H-r);c.quadraticCurveTo(W,H,W-r,H);c.lineTo(r,H);c.quadraticCurveTo(0,H,0,H-r);c.lineTo(0,r);c.quadraticCurveTo(0,0,r,0)}
+   else if(shape.value==='diamond'){c.moveTo(CX,0);c.lineTo(W,CY);c.lineTo(CX,H);c.lineTo(0,CY);c.closePath()}
+   else if(shape.value==='hexagon'){c.moveTo(W*.25,0);c.lineTo(W*.75,0);c.lineTo(W,CY);c.lineTo(W*.75,H);c.lineTo(W*.25,H);c.lineTo(0,CY);c.closePath()}
+   else if(shape.value==='heart'){c.moveTo(CX,H*.9);c.bezierCurveTo(W*.02,H*.52,W*.02,H*.2,W*.27,H*.2);c.bezierCurveTo(W*.42,H*.2,W*.48,H*.34,CX,H*.4);c.bezierCurveTo(W*.62,H*.25,W*.72,H*.08,W*.86,H*.2);c.bezierCurveTo(W*1.1,H*.38,W*.88,H*.66,CX,H*.9);c.closePath()}
+   else if(shape.value==='star'){for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,r=i%2?W*.22:W*.47,x=CX+Math.cos(a)*r,y=CY+Math.sin(a)*r;i?c.lineTo(x,y):c.moveTo(x,y)}c.closePath()}
+   else if(shape.value==='portrait'){c.rect(W*.18,0,W*.64,H)}
+   else if(shape.value==='landscape'){c.rect(0,H*.18,W,H*.64)}
+   c.clip()}
+ drawBaseBackground(c,angle);
+ if(img){
+   const r=photoRect();
+   c.save();
+   if(rotateMode.value==='crop'){
+     // Keep the user's chosen crop stationary; rotate the rendered crop as a layer around the canvas center.
+     const layer=document.createElement('canvas');layer.width=W;layer.height=H;const l=layer.getContext('2d');
+     l.clearRect(0,0,W,H);l.drawImage(img,r.x,r.y,r.w,r.h);
+     c.translate(CX,CY);c.rotate(angle);c.drawImage(layer,-CX,-CY);c.restore();
+   }else{
+     c.translate(CX,CY);c.rotate(angle);c.drawImage(img,r.x-CX,r.y-CY,r.w,r.h);c.restore();
+   }
+ }
+ if(shape.value!=='square')c.restore();
+}
+function drawPreview(){drawScene(ctx,0)}
+photo.addEventListener('change',()=>{
+ const f=photo.files?.[0];if(!f)return;
+ if(img?.src?.startsWith('blob:'))URL.revokeObjectURL(img.src);
+ img=new Image();img.onload=()=>{view={scale:1,x:0,y:0};make.disabled=false;drawPreview();status.textContent='Photo ready. Touch the preview to adjust it.';download.hidden=true};
+ img.onerror=()=>status.textContent='Could not open the photo. Try another one.';
+ img.src=URL.createObjectURL(f);
+});
+[shape,rotateMode,fill].forEach(el=>el.addEventListener('change',drawPreview));
+function localPoint(e){const r=canvas.getBoundingClientRect();return{x:(e.clientX-r.left)*W/r.width,y:(e.clientY-r.top)*H/r.height}}
+function dist(a,b){return Math.hypot(a.x-b.x,a.y-b.y)}
+canvas.addEventListener('pointerdown',e=>{
+ if(!img)return;canvas.setPointerCapture(e.pointerId);pointers.set(e.pointerId,localPoint(e));
+ if(pointers.size===1){const p=pointers.get(e.pointerId);gesture={kind:'drag',start:p,origin:{x:view.x,y:view.y}}}
+ else if(pointers.size>=2){const pts=[...pointers.values()];gesture={kind:'pinch',dist:Math.max(1,dist(pts[0],pts[1])),scale:view.scale,center:{x:(pts[0].x+pts[1].x)/2,y:(pts[0].y+pts[1].y)/2},origin:{x:view.x,y:view.y}}}
+});
+canvas.addEventListener('pointermove',e=>{
+ if(!pointers.has(e.pointerId))return;pointers.set(e.pointerId,localPoint(e));
+ if(pointers.size===1&&gesture?.kind==='drag'){const p=pointers.get(e.pointerId);view.x=gesture.origin.x+p.x-gesture.start.x;view.y=gesture.origin.y+p.y-gesture.start.y;drawPreview()}
+ else if(pointers.size>=2){const pts=[...pointers.values()];if(!gesture||gesture.kind!=='pinch'){gesture={kind:'pinch',dist:Math.max(1,dist(pts[0],pts[1])),scale:view.scale,center:{x:(pts[0].x+pts[1].x)/2,y:(pts[0].y+pts[1].y)/2},origin:{x:view.x,y:view.y}}}
+ const d=dist(pts[0],pts[1]),center={x:(pts[0].x+pts[1].x)/2,y:(pts[0].y+pts[1].y)/2};
+ view.scale=Math.max(.1,Math.min(12,gesture.scale*d/gesture.dist));
+ view.x=gesture.origin.x+center.x-gesture.center.x;view.y=gesture.origin.y+center.y-gesture.center.y;drawPreview()
+ }
+});
+function release(e){pointers.delete(e.pointerId);gesture=null;if(pointers.size===1){const [id,p]=[...pointers.entries()][0];gesture={kind:'drag',start:p,origin:{x:view.x,y:view.y}}}}
+canvas.addEventListener('pointerup',release);canvas.addEventListener('pointercancel',release);
+function setProgress(p,text){progressFill.style.width=Math.max(0,Math.min(100,p*100))+'%';if(text)busyText.textContent=text}
+function finishUI(){busy=false;make.disabled=false;cancelBtn.textContent='Close';}
+cancelBtn.addEventListener('click',()=>{if(busy){cancelRequested=true;busyText.textContent='Cancelling…';cancelBtn.disabled=true}else{overlay.hidden=true;cancelBtn.disabled=false;cancelBtn.textContent='Cancel process'}});
+function gifEncode(frames,w,h,delayCs){
+ // Compact offline GIF89a encoder with a 3-3-2 color palette and LZW compression.
+ const bytes=[];const ascii=s=>{for(let i=0;i<s.length;i++)bytes.push(s.charCodeAt(i))};
+ const u16=n=>{bytes.push(n&255,(n>>8)&255)};
+ ascii('GIF89a');u16(w);u16(h);bytes.push(0xF7,0,0);
+ for(let i=0;i<256;i++){bytes.push(((i>>5)&7)*255/7|0,((i>>2)&7)*255/7|0,(i&3)*255/3|0)}
+ bytes.push(0x21,0xFF,0x0B);ascii('NETSCAPE2.0');bytes.push(3,1,0,0,0);
+ function blockData(data){for(let i=0;i<data.length;i+=255){const part=data.slice(i,i+255);bytes.push(part.length,...part)}bytes.push(0)}
+ function lzw(pix){
+   const min=8,clear=1<<min,end=clear+1;let dict=new Map(),next=end+1,codeSize=min+1,bits=0,acc=0,out=[];
+   const emit=code=>{acc|=code<<bits;bits+=codeSize;while(bits>=8){out.push(acc&255);acc>>=8;bits-=8}};
+   emit(clear);let prefix=pix[0]??0;
+   for(let i=1;i<pix.length;i++){
+     const k=pix[i],combo=prefix+','+k;
+     if(dict.has(combo)){prefix=dict.get(combo)}
+     else{
+       emit(prefix);
+       if(next<4096){
+         dict.set(combo,next++);
+         if(next>(1<<codeSize)&&codeSize<12)codeSize++;
+       }else{emit(clear);dict.clear();next=end+1;codeSize=min+1}
+       prefix=k;
+     }
+   }
+   emit(prefix);emit(end);if(bits)out.push(acc&255);return out;
+ }
+ for(const pix of frames){bytes.push(0x21,0xF9,4,0);u16(delayCs);bytes.push(0,0);bytes.push(0x2C);u16(0);u16(0);u16(w);u16(h);bytes.push(0);bytes.push(8);blockData(lzw(pix))}
+ bytes.push(0x3B);return new Blob([new Uint8Array(bytes)],{type:'image/gif'});
+}
+make.addEventListener('click',async()=>{
+ if(!img||busy)return;
+ busy=true;cancelRequested=false;make.disabled=true;download.hidden=true;overlay.hidden=false;cancelBtn.disabled=false;cancelBtn.textContent='Cancel process';setProgress(0,'Starting…');
+ const size=Number(quality.value),durationMs=Number(duration.value)*1000,rpm=Number(speed.value),framesPerSec=Number(fps.value),totalTurns=rpm*Number(duration.value)/60;
+ const out=document.createElement('canvas');out.width=size;out.height=size;const octx=out.getContext('2d',{willReadFrequently:true});
+ function render(angle){octx.setTransform(size/720,0,0,size/720,0,0);drawScene(octx,angle)}
+ const gifMode=format.value==='gif';
+ if(gifMode&&(Number(duration.value)>30||size>360)){
+   status.textContent='For GIF, set duration to 30 seconds or less and resolution to 360 or lower.';
+   busy=false;make.disabled=false;overlay.hidden=true;return;
+ }
+ if(!gifMode&&(!out.captureStream||!window.MediaRecorder)){status.textContent='This browser does not support video recording. Try Chrome on Android.';busy=false;make.disabled=false;overlay.hidden=true;return}
+ if(gifMode){
+   try{
+     const gifFps=Math.min(15,framesPerSec),count=Math.max(2,Math.ceil(Number(duration.value)*gifFps)),frames=[];
+     for(let i=0;i<count;i++){
+       if(cancelRequested)throw new Error('cancelled');
+       render(i/count*Math.PI*2*totalTurns);
+       const data=octx.getImageData(0,0,size,size).data,pix=new Uint8Array(size*size);
+       for(let p=0,j=0;p<data.length;p+=4,j++)pix[j]=(data[p]>>5)<<5|(data[p+1]>>5)<<2|(data[p+2]>>6);
+       frames.push(pix);setProgress((i+1)/count,`Preparing GIF frames: ${i+1}/${count}`);
+       if(i%3===0)await new Promise(r=>setTimeout(r,0));
+     }
+     if(cancelRequested)throw new Error('cancelled');
+     setProgress(.98,'Compressing GIF…');
+     const blob=gifEncode(frames,size,size,Math.max(2,Math.round(100/gifFps)));
+     if(blobUrl)URL.revokeObjectURL(blobUrl);blobUrl=URL.createObjectURL(blob);download.href=blobUrl;const gifBase=(document.getElementById('filename')?.value.trim()||'SpinoStudio-animation').replace(/[\\\\/:*?"<>|]+/g,'-').replace(/\\s+/g,'-').replace(/\\.+$/g,'');download.download=gifBase+'.gif';download.hidden=false;status.textContent='Done! Your animated GIF is ready.';
+     setProgress(1,'Completed!');finishUI();
+   }catch(e){status.textContent=e.message==='cancelled'?'Process cancelled.':'Could not create GIF. Try a lower resolution or shorter duration.';finishUI()}
+   return;
+ }
+ const stream=out.captureStream(framesPerSec);
+ const candidates=format.value==='mp4'?['video/mp4;codecs=avc1.42E01E','video/mp4']
+   :format.value==='mp4av1'?['video/mp4;codecs=av01.0.08M.08','video/mp4;codecs=av01','video/mp4']
+   :format.value==='webmvp8'?['video/webm;codecs=vp8','video/webm']
+   :format.value==='webmvp9'?['video/webm;codecs=vp9','video/webm']
+   :format.value==='ogg'?['video/ogg;codecs=theora','video/ogg']
+   :format.value==='webm'?['video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm']
+   :['video/mp4;codecs=avc1.42E01E','video/mp4','video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm'];
+ const mime=candidates.find(t=>MediaRecorder.isTypeSupported(t));
+ if(!mime){stream.getTracks().forEach(t=>t.stop());status.textContent=format.value==='mp4'?'This browser does not support MP4 recording; choose WebM.':'No supported format found.';finishUI();overlay.hidden=true;return}
+ let rec;try{rec=new MediaRecorder(stream,{mimeType:mime})}catch(e){stream.getTracks().forEach(t=>t.stop());status.textContent='Could not start recording. Choose WebM and try again.';finishUI();overlay.hidden=true;return}
+ const chunks=[];rec.ondataavailable=e=>{if(e.data?.size)chunks.push(e.data)};
+ rec.onerror=()=>{stream.getTracks().forEach(t=>t.stop());status.textContent='A recording error occurred.';finishUI();overlay.hidden=true};
+ rec.onstop=()=>{stream.getTracks().forEach(t=>t.stop());const isMp4=mime.startsWith('video/mp4');if(!cancelRequested){const blob=new Blob(chunks,{type:isMp4?'video/mp4':'video/webm'});if(blobUrl)URL.revokeObjectURL(blobUrl);blobUrl=URL.createObjectURL(blob);download.href=blobUrl;const ext=isMp4?'mp4':(mime.startsWith('video/ogg')?'ogv':'webm');const fileBase=(document.getElementById('filename')?.value.trim()||'SpinoStudio-animation').replace(/[\\\\/:*?"<>|]+/g,'-').replace(/\\s+/g,'-').replace(/\\.+$/g,'');download.download=fileBase+'.'+ext;download.hidden=false;status.textContent='Done! Format: '+(isMp4?'MP4':'WebM')+'. You can download your file.'}else status.textContent='Process cancelled.';finishUI();setProgress(1,cancelRequested?'İptal edildi.':'Completed!');drawPreview()};
+ rec.start();
+ const start=performance.now();
+ function frame(now){if(cancelRequested){if(rec.state==='recording')rec.stop();return}const p=Math.min((now-start)/durationMs,1);render(p*Math.PI*2*totalTurns);setProgress(p,`Recording video: ${Math.round(p*100)}%`);if(p<1&&rec.state==='recording')requestAnimationFrame(frame);else if(rec.state==='recording')setTimeout(()=>{if(rec.state==='recording')rec.stop()},180)}
+ requestAnimationFrame(frame);
+});
+})();
+</script>
+<script>
+(() => {
+const languages = [
+["en","English"],["af","Afrikaans"],["sq","Albanian"],["am","Amharic"],["ar","Arabic"],["hy","Armenian"],["as","Assamese"],["ay","Aymara"],["az","Azerbaijani"],["bm","Bambara"],
+["eu","Basque"],["be","Belarusian"],["bn","Bengali"],["bho","Bhojpuri"],["bs","Bosnian"],["bg","Bulgarian"],["my","Burmese"],["ca","Catalan"],["ceb","Cebuano"],["zh-CN","Chinese (Simplified)"],
+["zh-TW","Chinese (Traditional)"],["co","Corsican"],["hr","Croatian"],["cs","Czech"],["da","Danish"],["dv","Divehi"],["doi","Dogri"],["nl","Dutch"],["eo","Esperanto"],["et","Estonian"],
+["ee","Ewe"],["tl","Filipino"],["fi","Finnish"],["fr","French"],["fy","Frisian"],["gl","Galician"],["ka","Georgian"],["de","German"],["el","Greek"],["gn","Guarani"],
+["gu","Gujarati"],["ht","Haitian Creole"],["ha","Hausa"],["haw","Hawaiian"],["he","Hebrew"],["hi","Hindi"],["hmn","Hmong"],["hu","Hungarian"],["is","Icelandic"],["ig","Igbo"],
+["ilo","Ilocano"],["id","Indonesian"],["ga","Irish"],["it","Italian"],["ja","Japanese"],["jv","Javanese"],["kn","Kannada"],["kk","Kazakh"],["km","Khmer"],["rw","Kinyarwanda"],
+["gom","Konkani"],["ko","Korean"],["kri","Krio"],["ku","Kurdish"],["ky","Kyrgyz"],["lo","Lao"],["la","Latin"],["lv","Latvian"],["ln","Lingala"],["lt","Lithuanian"],
+["lg","Luganda"],["lb","Luxembourgish"],["mk","Macedonian"],["mai","Maithili"],["mg","Malagasy"],["ms","Malay"],["ml","Malayalam"],["mt","Maltese"],["mi","Maori"],["mr","Marathi"],
+["mni-Mtei","Meiteilon (Manipuri)"],["lus","Mizo"],["mn","Mongolian"],["ne","Nepali"],["nso","Northern Sotho"],["no","Norwegian"],["ny","Nyanja"],["or","Odia"],["om","Oromo"],["ps","Pashto"],
+["fa","Persian"],["pl","Polish"],["pt","Portuguese"],["pa","Punjabi"],["qu","Quechua"],["ro","Romanian"],["ru","Russian"],["sm","Samoan"],["sa","Sanskrit"],["gd","Scots Gaelic"],
+["sr","Serbian"],["st","Sesotho"],["sn","Shona"],["sd","Sindhi"],["si","Sinhala"],["sk","Slovak"],["sl","Slovenian"],["so","Somali"],["es","Spanish"],["su","Sundanese"],
+["sw","Swahili"],["sv","Swedish"],["tg","Tajik"],["ta","Tamil"],["tt","Tatar"],["te","Telugu"],["th","Thai"],["ti","Tigrinya"],["ts","Tsonga"],["tr","Turkish"],
+["tk","Turkmen"],["ak","Twi"],["uk","Ukrainian"],["ur","Urdu"],["ug","Uyghur"],["uz","Uzbek"],["vi","Vietnamese"],["cy","Welsh"],["xh","Xhosa"],["yi","Yiddish"],["yo","Yoruba"],["zu","Zulu"]
+];
+const select=document.getElementById('languageSelect');
+const status=document.getElementById('languageStatus');
+if(!select) return;
+languages.slice(0,120).forEach(([code,name])=>{const o=document.createElement('option');o.value=code;o.textContent=name;select.appendChild(o)});
+select.value='en';
+const originalNodes=[];
+const walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT,{acceptNode(node){
+ if(!node.nodeValue.trim()||node.parentElement.closest('script,style,option#languageSelect')) return NodeFilter.FILTER_REJECT;
+ if(node.parentElement.closest('#languageSelect')) return NodeFilter.FILTER_REJECT;
+ return NodeFilter.FILTER_ACCEPT;
+}});
+while(walker.nextNode()){const n=walker.currentNode;originalNodes.push({node:n,text:n.nodeValue})}
+const attrs=[];
+document.querySelectorAll('input[placeholder],input[aria-label],button[aria-label],select[aria-label]').forEach(el=>{
+ for(const a of ['placeholder','aria-label']) if(el.hasAttribute(a)) attrs.push({el,a,text:el.getAttribute(a)});
+});
+const cache=new Map();
+async function translateBatch(texts, target){
+ const key=target+'|'+texts.join('\n⟪SPINO⟫\n');if(cache.has(key))return cache.get(key);
+ const joined=texts.join('\n⟪SPINO⟫\n');
+ const url='https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl='+encodeURIComponent(target)+'&dt=t&q='+encodeURIComponent(joined);
+ const response=await fetch(url);if(!response.ok)throw new Error('Translation request failed');
+ const data=await response.json();
+ const result=(data[0]||[]).map(x=>x[0]||'').join('');
+ const pieces=result.split(/\s*⟪SPINO⟫\s*/);
+ if(pieces.length!==texts.length) throw new Error('Translation response could not be split');
+ cache.set(key,pieces);return pieces;
+}
+let requestId=0;
+async function applyLanguage(target){
+ const id=++requestId;
+ if(target==='en'){
+   originalNodes.forEach(x=>x.node.nodeValue=x.text);
+   attrs.forEach(x=>x.el.setAttribute(x.a,x.text));
+   document.documentElement.lang='en';
+   status.textContent='English is the default language.';
+   return;
+ }
+ status.textContent='Translating interface… internet connection required.';
+ select.disabled=true;
+ try{
+   const nodes=originalNodes.filter(x=>x.text.trim());
+   const groups=[];for(let i=0;i<nodes.length;i+=5)groups.push(nodes.slice(i,i+5));
+   for(let i=0;i<groups.length;i++){
+     if(id!==requestId)return;
+     const g=groups[i],translated=await translateBatch(g.map(x=>x.text),target);
+     g.forEach((x,j)=>x.node.nodeValue=translated[j]);
+     status.textContent='Translating interface… '+Math.round((i+1)/groups.length*100)+'%';
+   }
+   for(const a of attrs){
+     if(id!==requestId)return;
+     try{const t=await translateBatch([a.text],target);a.el.setAttribute(a.a,t[0])}catch(e){}
+   }
+   document.documentElement.lang=target;
+   status.textContent='Interface translated. Some browser-generated messages may remain in English.';
+ }catch(e){
+   if(id===requestId){
+     originalNodes.forEach(x=>x.node.nodeValue=x.text);
+     attrs.forEach(x=>x.el.setAttribute(x.a,x.text));
+     select.value='en';
+     document.documentElement.lang='en';
+     status.textContent='Translation could not load. Check your internet connection; English has been restored.';
+   }
+ }finally{if(id===requestId)select.disabled=false}
+}
+select.addEventListener('change',()=>applyLanguage(select.value));
+})();
+</script>
+
+</body></html>
